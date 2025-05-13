@@ -1,6 +1,7 @@
 """optimiser.py – Adam, SOAP‑PDE, SOAP‑Lib (JAX) trainers"""
 import optax
 import jax
+import matplotlib.pyplot as plt
 import jax.numpy as jnp
 from jax import tree_util
 from typing import NamedTuple
@@ -96,3 +97,12 @@ def get_optim_trainer_factories(model, residual_fn):
     if SoapLib is not None:
         factories['SOAP-Lib'] = make_soap_lib_trainer(model, residual_fn)
     return factories
+
+
+
+
+def show_all_figures():
+    figs = [plt.figure(n) for n in plt.get_fignums()]
+    for fig in figs:
+        fig.show()
+
