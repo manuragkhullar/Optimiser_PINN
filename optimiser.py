@@ -3,7 +3,7 @@ import optax
 import jax
 import jax.numpy as jnp
 from jax import tree_util
-
+from typing import NamedTuple
 try:
     from soap import SOAP as SoapLib
 except ImportError:
@@ -21,7 +21,7 @@ def make_adam_trainer(model, residual_fn, lr=1e-3):
     return opt.init, step
 
 # ──────────────────────────────────────── SOAP‑PDE ─────────────────────────────
-class _SoapState(jax.typing.NamedTuple):
+class _SoapState(NamedTuple):
     count: jnp.ndarray; m: any; v: any
 
 def _init_soap_state(params):
