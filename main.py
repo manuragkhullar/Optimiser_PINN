@@ -31,7 +31,7 @@ from optimiser import get_optim_trainer_factories
 #  Training loop (optimizer‑agnostic)
 # ────────────────────────────────────────────────────────────────────────────────
 
-def train(rng, init_fn, step_fn, dataset, model, epochs=2000, batch_size=1024):
+def train(rng, init_fn, step_fn, dataset, model, epochs=100, batch_size=1024):
     params = model.init(rng, jnp.zeros((1,)), jnp.zeros((1,)))
     state  = init_fn(params)
     (x_f, _), *_ = dataset
