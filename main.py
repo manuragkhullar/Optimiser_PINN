@@ -67,7 +67,7 @@ def compare_error_plots(pde: str, model, trained_params: dict):
         plt.imshow(err, extent=[x[0], x[-1], t[0], t[-1]], origin='lower', aspect='auto', cmap='plasma')
         plt.colorbar(); plt.xlabel('x'); plt.ylabel('t')
         plt.title(f"|FDM - {name}| error")
-        plt.tight_layout(); plt.show()
+        plt.tight_layout(); plt.show(block=True)
 
 # ────────────────────────────────────────────────────────────────────────────────
 #  Main
