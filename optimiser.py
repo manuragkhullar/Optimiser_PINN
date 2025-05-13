@@ -1,4 +1,4 @@
-"""optimiser.py – Adam, SOAP‑PDE, SOAP‑Lib trainers"""
+"""optimiser.py – Adam, SOAP‑PDE, SOAP‑Lib (JAX) trainers"""
 import optax
 import jax
 import jax.numpy as jnp
@@ -6,7 +6,7 @@ from jax import tree_util
 from typing import NamedTuple
 
 try:
-    from soap import SOAP as SoapLib
+    from soap_jax import soap as SoapLib  # <-- JAX-native SOAP
 except ImportError:
     SoapLib = None
 
@@ -62,13 +62,20 @@ def make_soap_pde_trainer(model, residual_fn, lr=1e-3, b1=0.9, b2=0.999, eps=1e-
 
     return _init_soap_state, step
 
-# ─────────────────────────────────────── SOAP‑Lib ──────────────────────────────
+# ─────────────────────────────────────── SOAP‑Lib (JAX) ──────────────────────────────
 
-def make_soap_lib_trainer(model, residual_fn, lr=3e-3, betas=(.95, .95), weight_decay=0.01, precond=10):
+def make_soap_lib_trainer(model, residual_fn, lr=3e-3, b1=0.95, b2=0.95, weight_decay=0.01, precond=10):
     if SoapLib is None:
-        raise ImportError("Install soap-optimizer via pip to use SOAP-Lib")
+        print("[!] SOAP-JAX not installed. Skipping SOAP-Lib.")
+        return lambda _: None, lambda *a: (None, None, float('inf'))
 
-    opt = SoapLib(lr=lr, betas=betas, weight_decay=weight_decay, precondition_frequency=precond)
+    opt = SoapLib(
+        learning_rate=lr,
+        b1=b1,
+        b2=b2,
+        weight_decay=weight_decay,
+        precondition_frequency=precond
+    )
 
     @jax.jit
     def step(p, s, batch):
