@@ -4,12 +4,23 @@ import jax
 import jax.numpy as jnp
 from jax import tree_util
 from typing import NamedTuple
-from losses import loss_fn  # <- use external file for clarity
 
 try:
     from soap import SOAP as SoapLib
 except ImportError:
     SoapLib = None
+
+# ─────────────────────────────────────── Loss Function ─────────────────────────
+
+def loss_fn(params, batch, model, residual_fn):
+    (x_f, t_f), (x_i, t_i, u_i), (x_lb, x_rb, t_b, u_both) = batch
+    u_left, u_right = u_both[0], u_both[1]
+    ic = jnp.mean((model.apply(params, x_i, t_i) - u_i) ** 2)
+    bc = jnp.mean((model.apply(params, x_lb, t_b) - u_left) ** 2 +
+                  (model.apply(params, x_rb, t_b) - u_right) ** 2)
+    res = jax.vmap(lambda xx, tt: residual_fn(params, xx, tt, model))(x_f, t_f)
+    phys = jnp.mean(res ** 2)
+    return ic + bc + phys
 
 # ───────────────────────────────────────── Adam ─────────────────────────────────
 
@@ -40,20 +51,13 @@ def _init_soap_state(params):
 def make_soap_pde_trainer(model, residual_fn, lr=1e-3, b1=0.9, b2=0.999, eps=1e-8):
     @jax.jit
     def step(p, s, batch):
-        # total loss and gradients
         l, g_tot = jax.value_and_grad(lambda pp: loss_fn(pp, batch, model, residual_fn))(p)
-
-        # extract collocation points
         (x_f, t_f) = batch[0]
-
-        # compute Jacobian of residual wrt params
         g_res = jax.vmap(lambda xx, tt: jax.grad(lambda pp: residual_fn(pp, xx, tt, model))(p))(x_f, t_f)
-
-        v = tree_util.tree_map(lambda v_old, g: b2 * v_old + (1 - b2) * jnp.mean(g**2, axis=0), s.v, g_res)
+        v = tree_util.tree_map(lambda v_old, g: b2 * v_old + (1 - b2) * jnp.mean(g ** 2, axis=0), s.v, g_res)
         m = tree_util.tree_map(lambda m_old, g: b1 * m_old + (1 - b1) * g, s.m, g_tot)
         m_hat = tree_util.tree_map(lambda m_, v_: m_ / (jnp.sqrt(v_) + eps), m, v)
         p = tree_util.tree_map(lambda w, mh: w - lr * mh, p, m_hat)
-
         return p, _SoapState(s.count + 1, m, v), l
 
     return _init_soap_state, step
@@ -85,4 +89,3 @@ def get_optim_trainer_factories(model, residual_fn):
     if SoapLib is not None:
         factories['SOAP-Lib'] = make_soap_lib_trainer(model, residual_fn)
     return factories
-
