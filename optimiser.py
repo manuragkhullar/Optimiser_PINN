@@ -4,6 +4,7 @@ import jax
 import jax.numpy as jnp
 from jax import tree_util
 from typing import NamedTuple
+from main import loss_fn 
 try:
     from soap import SOAP as SoapLib
 except ImportError:
@@ -15,7 +16,7 @@ def make_adam_trainer(model, residual_fn, lr=1e-3):
     opt = optax.adam(lr)
     @jax.jit
     def step(p, s, batch):
-        l, g = jax.value_and_grad(lambda pp: batch['loss'](pp))(p)
+        l, g = jax.value_and_grad(lambda pp: loss_fn(pp, batch, model, residual_fn))(p)
         upd, s = opt.update(g, s, p); p = optax.apply_updates(p, upd)
         return p, s, l
     return opt.init, step
@@ -33,7 +34,7 @@ def _init_soap_state(params):
 def make_soap_pde_trainer(model, residual_fn, lr=1e-3, b1=.9, b2=.999, eps=1e-8):
     @jax.jit
     def step(p, s, batch):
-        l, g_tot = jax.value_and_grad(lambda pp: batch['loss'](pp))(p)
+        l, g_tot = jax.value_and_grad(lambda pp: loss_fn(pp, batch, model, residual_fn))(p)
         x_f, t_f = batch['x_f'], batch['t_f']
         g_res = jax.vmap(lambda xx, tt: jax.grad(lambda pp: residual_fn(pp, xx, tt, model))(p))(x_f, t_f)
         v = tree_util.tree_map(lambda v_old, g: b2*v_old + (1-b2)*jnp.mean(g**2,0), s.v, g_res)
@@ -51,7 +52,7 @@ def make_soap_lib_trainer(model, residual_fn, lr=3e-3, betas=(.95,.95), weight_d
     opt = SoapLib(lr=lr, betas=betas, weight_decay=weight_decay, precondition_frequency=precond)
     @jax.jit
     def step(p, s, batch):
-        l, g = jax.value_and_grad(lambda pp: batch['loss'](pp))(p)
+        l, g = jax.value_and_grad(lambda pp: loss_fn(pp, batch, model, residual_fn))(p)
         upd, s = opt.update(g, s, p); p = optax.apply_updates(p, upd)
         return p, s, l
     return opt.init, step
