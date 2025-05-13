@@ -4,7 +4,7 @@ import jax
 import matplotlib.pyplot as plt
 import jax.numpy as jnp
 from jax import tree_util
-from typing import NamedTuple
+from typing import NamedTuple, Any
 
 try:
     from soap_jax import soap as SoapLib  # <-- JAX-native SOAP
@@ -40,8 +40,8 @@ def make_adam_trainer(model, residual_fn, lr=1e-3):
 # ──────────────────────────────────────── SOAP‑PDE ─────────────────────────────
 class _SoapState(NamedTuple):
     count: jnp.ndarray
-    m: any
-    v: any
+    m: Any
+    v: Any
 
 def _init_soap_state(params):
     zeros = lambda p: jnp.zeros_like(p)
@@ -98,11 +98,10 @@ def get_optim_trainer_factories(model, residual_fn):
         factories['SOAP-Lib'] = make_soap_lib_trainer(model, residual_fn)
     return factories
 
-
-
+# ───────────────────────── Display all figures (for Colab) ────────────────────
 
 def show_all_figures():
+    """Manually display all active matplotlib figures (e.g., in Colab)."""
     figs = [plt.figure(n) for n in plt.get_fignums()]
     for fig in figs:
         fig.show()
-
