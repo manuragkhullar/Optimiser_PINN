@@ -99,9 +99,9 @@ def main():
             print(f"[!] Skipping {name} (optimizer unavailable)")
             continue
 
-    print(f"\n🚀 Training with {name}…")
-    params = train(rng_key, init_fn, step_fn, dataset, model)
-    trained_params[name] = params
+        print(f"\n Training with {name}…")
+        params = train(rng_key, init_fn, step_fn, dataset, model)
+        trained_params[name] = params
 
     # Compare predictions
     compare_error_plots(args.pde, model, trained_params)
