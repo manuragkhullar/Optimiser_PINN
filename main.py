@@ -95,9 +95,13 @@ def main():
     # Train with each optimizer
     trained_params = {}
     for name, (init_fn, step_fn) in trainer_factories.items():
-        print(f"\nTraining with {name}…")
-        params = train(rng_key, init_fn, step_fn, dataset, model)
-        trained_params[name] = params
+        if init_fn is None or step_fn is None:
+            print(f"[!] Skipping {name} (optimizer unavailable)")
+            continue
+
+    print(f"\n🚀 Training with {name}…")
+    params = train(rng_key, init_fn, step_fn, dataset, model)
+    trained_params[name] = params
 
     # Compare predictions
     compare_error_plots(args.pde, model, trained_params)
