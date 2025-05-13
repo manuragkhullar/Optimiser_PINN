@@ -60,14 +60,29 @@ def evaluate(model, params, X, T):
 def compare_error_plots(pde: str, model, trained_params: dict):
     x, t, fdm = load_mat_data(pde)
     X, T = np.meshgrid(x, t)
+    os.makedirs("figures", exist_ok=True)  # save to figures/ directory
+
     for name, params in trained_params.items():
         U_pred = evaluate(model, params, X, T)
         err = np.abs(fdm - U_pred)
-        plt.figure(figsize=(6, 4))
+
+        fig = plt.figure(figsize=(6, 4))
         plt.imshow(err, extent=[x[0], x[-1], t[0], t[-1]], origin='lower', aspect='auto', cmap='plasma')
-        plt.colorbar(); plt.xlabel('x'); plt.ylabel('t')
+        plt.colorbar()
+        plt.xlabel('x')
+        plt.ylabel('t')
         plt.title(f"|FDM - {name}| error")
-        plt.tight_layout(); plt.show(block=True)
+        plt.tight_layout()
+
+        filename = f"figures/{pde}_{name}_error.png"
+        fig.savefig(filename)
+        print(f"[✓] Saved: {filename}")
+
+        # For GUI (VSCode, terminal) — forces window to open if supported
+        try:
+            plt.show(block=True)
+        except Exception as e:
+            print(f"[!] Could not show figure: {e}")
 
 # ────────────────────────────────────────────────────────────────────────────────
 #  Main
