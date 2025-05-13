@@ -99,7 +99,7 @@ def main():
             print(f"[!] Skipping {name} (optimizer unavailable)")
             continue
 
-        print(f"\n Training with {name}…")
+        print(f"\n🚀 Training with {name}…")
         params = train(rng_key, init_fn, step_fn, dataset, model)
         trained_params[name] = params
 
