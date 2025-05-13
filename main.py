@@ -16,6 +16,7 @@ dataloader.py   – Loads <pde>.mat and builds training batches
 Place the corresponding <pde>.mat file (e.g. burgers.mat, allen_cahn.mat) in your
 working directory before running.
 """
+import os
 import argparse
 import jax
 import jax.numpy as jnp
