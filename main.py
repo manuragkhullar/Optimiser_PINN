@@ -105,8 +105,7 @@ def main():
 
     # Compare predictions
     compare_error_plots(args.pde, model, trained_params)
-    from optimiser import show_all_figures
-    show_all_figures()
+
 
 
 if __name__ == '__main__':
